@@ -267,14 +267,7 @@ open class LocationPicker: UIViewController, UIGestureRecognizerDelegate {
      - important:
      If this property is set to `true`, remember to update your models by closure, delegate, or override.
      */
-    public var isAlternativeLocationEditable = false
-    
-    /**
-     Whether to force reverse geocoding or not. If this property is set to `true`, the location will be reverse geocoded. This is helpful if you require an exact location (e.g. providing street), but the user just searched for a town name.
-     The default behavior is to not geocode any additional search result.
-     */
-    public var isForceReverseGeocoding = false
-    
+    public var isAlternativeLocationEditable = false    
     
     /// `tableView.backgroundColor` is set to this property's value afte view is loaded. __Default__ is __`UIColor.whiteColor()`__
     public var tableViewBackgroundColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)
@@ -725,6 +718,14 @@ extension LocationPicker {
     }
     
     /**
+     Whether to force reverse geocoding or not. If this property is set to `true`, the location will be reverse geocoded. This is helpful if you require an exact location (e.g. providing street), but the user just searched for a town name.
+     The default behavior is to not geocode any additional search result.
+     */
+    open func forceReverseGeocoding(locationItem: LocationItem) -> Bool {
+        return false
+    }
+
+    /**
      This method would be called after user finally pick a location.
      
      - important:
@@ -858,7 +859,7 @@ extension LocationPicker {
 
 extension LocationPicker: UISearchBarDelegate {
     
-    public func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+    open func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText.characters.count > 0 {
             let localSearchRequest = MKLocalSearchRequest()
             localSearchRequest.naturalLanguageQuery = searchText
@@ -908,7 +909,7 @@ extension LocationPicker: UISearchBarDelegate {
         }
     }
     
-    public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+    open func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.endEditing(true)
     }
     
@@ -919,15 +920,15 @@ extension LocationPicker: UISearchBarDelegate {
 
 extension LocationPicker: UITableViewDelegate, UITableViewDataSource {
     
-    public func numberOfSections(in tableView: UITableView) -> Int {
+    open func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    open func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 1 + searchResultLocations.count + alternativeLocationCount
     }
     
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    open func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var cell: LocationCell!
         
         if indexPath.row == 0 {
@@ -950,7 +951,7 @@ extension LocationPicker: UITableViewDelegate, UITableViewDataSource {
         return cell
     }
     
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    open func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         searchBar.endEditing(true)
         longitudinalDistance = defaultLongitudinalDistance
         
@@ -973,7 +974,7 @@ extension LocationPicker: UITableViewDelegate, UITableViewDataSource {
             let cell = tableView.cellForRow(at: indexPath) as! LocationCell
             let locationItem = cell.locationItem!
             let coordinate = locationItem.coordinate
-            if (coordinate != nil && self.isForceReverseGeocoding) {
+            if (coordinate != nil && self.forceReverseGeocoding(locationItem: locationItem)) {
                 reverseGeocodeLocation(CLLocation(latitude: coordinate!.latitude, longitude: coordinate!.longitude))
             } else {
                 selectLocationItem(locationItem)
@@ -981,12 +982,12 @@ extension LocationPicker: UITableViewDelegate, UITableViewDataSource {
         }
         
     }
-    
-    public func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+
+    open func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return isAlternativeLocationEditable && indexPath.row > searchResultLocations.count && indexPath.row <= alternativeLocationCount + searchResultLocations.count
     }
     
-    public func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+    open func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let cell = tableView.cellForRow(at: indexPath) as! LocationCell
             let locationItem = cell.locationItem!
@@ -1006,7 +1007,7 @@ extension LocationPicker: UITableViewDelegate, UITableViewDataSource {
 
 extension LocationPicker: MKMapViewDelegate {
     
-    public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
+    open func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
         if !animated {
             UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseOut, animations: {
                 self.pinView.frame.origin.y -= self.pinViewImageHeight / 2
@@ -1014,7 +1015,7 @@ extension LocationPicker: MKMapViewDelegate {
         }
     }
     
-    public func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+    open func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         longitudinalDistance = getLongitudinalDistance(fromMapRect: mapView.visibleMapRect)
         if isMapViewCenterChanged {
             isMapViewCenterChanged = false
@@ -1041,11 +1042,11 @@ extension LocationPicker: MKMapViewDelegate {
 
 extension LocationPicker: CLLocationManagerDelegate {
     
-    public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    open func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error)
     }
     
-    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    open func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if (tableView.indexPathForSelectedRow as NSIndexPath?)?.row == 0 {
             let currentLocation = locations[0]
             reverseGeocodeLocation(currentLocation)
